@@ -10,42 +10,98 @@
 
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Tuna.Revit.Extension;
 
-namespace Tuna.Sample.Commands
+namespace Tuna.Sample.Commands;
+
+[CommandButton(Image = "compass.png")]
+[Transaction(TransactionMode.Manual)]
+public class ElementFilterCommand : IExternalCommand
 {
-    [Transaction(TransactionMode.Manual)]
-    internal class ElementFilterCommand : IExternalCommand
+    public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
-        {
-            UIDocument uIDocument = commandData.Application.ActiveUIDocument;
-            Document document = uIDocument.Document;
+        UIDocument uIDocument = commandData.Application.ActiveUIDocument;
+        Document document = uIDocument.Document;
 
-            document.GetElements(Tuna.Revit.Extension.Constants.BuiltInCategories.Door);
 
-            Autodesk.Revit.DB.FilteredElementCollector doors = document.GetElements(new ElementCategoryFilter(Tuna.Revit.Extension.Constants.BuiltInCategories.Door));
-            TaskDialog.Show("sd", doors.Count().ToString());
+        //这些方法可以获取到项目中的图元，不包括图元类型，所以如果在使用 BuiltInCategory 的时候，不需要再对类型进行过滤
+        document.GetElements<Wall>();
 
-            ParameterValueProvider provider = new ParameterValueProvider(new ElementId(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS));
+        document.GetElements(typeof(Wall));
 
-            FilterStringRuleEvaluator evaluator = new FilterStringEquals();
+        document.GetElements(typeof(Wall), typeof(Floor));
 
-            FilterRule filterRule = new FilterStringRule(provider, evaluator, "ListA", false);
+        document.GetElements(new ElementClassFilter(typeof(Wall)));
 
-            FilteredElementCollector elems = document.GetElements(new ElementParameterFilter(new List<FilterRule>() { filterRule }));
-            commandData.Application.ActiveUIDocument.Selection.SetElementIds(elems.ToElementIds());
-            TaskDialog.Show("shiwu", $"{elems.GetElementCount()}");
+        document.GetElements(BuiltInCategories.Walls, BuiltInCategories.Walls);
 
-            document.GetElementTypes<WallType>().HasInstances<Wall>();
+        document.GetElements(BuiltInCategory.OST_Walls);
 
-            return Result.Succeeded;
-        }
+        document.GetElements(BuiltInCategory.OST_Walls, BuiltInCategory.OST_WallsCutPattern);
+
+        document.GetElements(StructuralWallUsage.Bearing);
+
+        document.GetElements(StructuralMaterialType.Steel);
+
+        document.GetElements(StructuralInstanceUsage.Column);
+
+        document.GetElements(StructuralType.Column);
+
+        document.GetElements(CurveElementType.ModelCurve);
+
+        document.GetElements(document.GetFamilySymbols(document.GetElements(typeof(Family)).FirstElementId()).FirstOrDefault());
+
+        document.GetElements(document.GetElements<Level>().FirstOrDefault());
+
+
+        //这些方法可以获取到项目中的类型
+        document.GetElementTypes(BuiltInCategories.Walls);
+
+        document.GetElementTypes(BuiltInCategory.OST_Walls);
+
+        document.GetElementTypes<WallType>();
+
+
+        //这个方法可以获取结构相关的族
+        document.GetStructualFamilies(StructuralMaterialType.Steel);
+
+
+        var elems = uIDocument.ActiveGraphicalView.GetElements(BuiltInCategory.OST_Walls);
+
+
+        uIDocument.SelectObjects(Autodesk.Revit.UI.Selection.ObjectType.Element, element => element.Category.Id == BuiltInCategories.Doors, "选择门");
+
+        uIDocument.SelectElement(BuiltInCategory.OST_Walls, "选择墙体");
+
+
+
+
+
+
+
+
+
+        //document.GetElements()
+        //    .OfCategories(BuiltInCategory.OST_Walls)
+        //    .WithParameterStringValue(BuiltInParameter.ALL_MODEL_MODEL, ParameterFilterStringOperator.BeginWith, "m")
+        //    .WithParameterStringValue(BuiltInParameter.ALL_MODEL_COST, ParameterFilterStringOperator.Contains, "m")
+        //    .WithParameterStringValue(BuiltInParameter.ALL_MODEL_FAMILY_NAME, ParameterFilterStringOperator.BeginWith, "m")
+        //    .WithParameterStringValue(BuiltInParameter.ALLOW_AUTO_EMBED, ParameterFilterStringOperator.BeginWith, "m")
+        //    .ToFilter()
+        //    .ToElements();
+
+
+
+        //document.GetElements<FamilyInstance>(instance => instance.Symbol.FamilyName == "预制");
+
+        //var elems = document.GetGraphicElements<FamilyInstance>(instance => instance.Name == "name");
+
+        //Enumerator.Range(1, 100);
+
+        return Result.Succeeded;
     }
 }

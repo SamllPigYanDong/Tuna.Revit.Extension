@@ -1,12 +1,12 @@
-﻿///************************************************************************************
-///   Author:十五
-///   CretaeTime:2023/4/3 23:55:24
-///   Mail:1012201478@qq.com
-///   Github:https://github.com/shichuyibushishiwu
-///
-///   Description:
-///
-///************************************************************************************
+﻿/************************************************************************************
+   Author:十五
+   CretaeTime:2023/4/3 23:55:24
+   Mail:1012201478@qq.com
+   Github:https://github.com/shichuyibushishiwu
+
+   Description:
+
+************************************************************************************/
 
 using Autodesk.Revit.DB;
 using System;
@@ -31,7 +31,7 @@ namespace Tuna.Revit.Extension
         /// <returns></returns>
         public static FilterRule CreateEqualsRule(ElementId id, string name, bool caseSensitive = false)
         {
-#if Rvt_23
+#if Rvt_23||Rvt_24
             return ParameterFilterRuleFactory.CreateEqualsRule(id, name);
 #else
             return ParameterFilterRuleFactory.CreateEqualsRule(id, name, caseSensitive);
